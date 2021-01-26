@@ -35,7 +35,7 @@ function handleEvent(event) {
   });
 }
 
-app.use("/", (req, res) => {
+app.get("/", (req, res) => {
   res.send("Hello everyone");
 });
 app.listen(8080, () => {
