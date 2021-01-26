@@ -52,8 +52,9 @@ async function handleEvent(event) {
         lastname: text_temp[1],
       });
       console.log(child);
+      console.log(moment().format("YYYY-MM-DD"));
       const attend = await attendances.findOne({
-        date: moment().format("YYYY-MM-DD"),
+        date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
         child: child._id,
       });
       console.log(attend);
