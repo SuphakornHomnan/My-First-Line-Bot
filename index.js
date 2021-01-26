@@ -41,18 +41,19 @@ function handleEvent(event) {
   // ชื่อ นามสกุล มาถึงห้องเรียนรึยัง?
   const text_temp = event.message.text.split(" ");
   console.log(text_temp);
+
   if (
     event.message.type === "text" &&
     text_temp[2] === "มาถึงห้องเรียนรึยัง?"
   ) {
     const child = childs.findOne({
-      firstname: text_temp,
+      firstname: text_temp[0],
       lastname: text_temp[1],
     });
     console.log(child);
     const attend = attendances.findOne({
       date: moment().format("YYYY-MM-DD"),
-      child,
+      child: child._id,
     });
     console.log(attend);
     let reply_attend = null;
