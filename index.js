@@ -76,9 +76,7 @@ async function handleEvent(event) {
     // ignore non-text-message event
     return Promise.resolve(null);
   }
-  const echo = { type: "text", text: event.message.text };
-  // use reply API
-  return client.replyMessage(event.replyToken, echo);
+
   let text_temp = event.message.text.split(" ");
   if (text_temp.length > 2) {
     try {
