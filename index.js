@@ -78,11 +78,10 @@ async function handleEvent(event) {
   }
 
   let text_temp = event.message.text.split(" ");
-  if (text_temp.length > 2) {
+  if (text_temp.length > 1) {
     try {
       const child = await childs.findOne({
-        firstname: text_temp[0],
-        lastname: text_temp[1],
+        nickname: text_temp[0],
       });
       console.log(child._id);
       console.log(moment().format("YYYY-MM-DD"));
@@ -103,7 +102,7 @@ async function handleEvent(event) {
       }
       const payload = {
         type: "text",
-        text: `วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`,
+        text: `วันนี้น้อง ${text_temp[0]} ${reply_attend}`,
       };
       return client.replyMessage(event.replyToken, payload);
     } catch (error) {
