@@ -78,13 +78,11 @@ async function handleEvent(event) {
     return Promise.resolve(null);
   }
   // ชื่อ นามสกุล มาถึงห้องเรียนรึยัง?
+  console.log(event.message.text);
   const text_temp = event.message.text.split(" ");
   console.log(text_temp);
   if (text_temp.length >= 3) {
-    if (
-      event.message.type === "text" &&
-      text_temp[2] === "มาถึงห้องเรียนรึยัง?"
-    ) {
+    if (text_temp[2] === "มาถึงห้องเรียนรึยัง?") {
       try {
         const child = await childs.findOne({
           firstname: text_temp[0],
@@ -120,7 +118,6 @@ async function handleEvent(event) {
   } else {
     // create a echoing text message
     const echo = { type: "text", text: event.message.text };
-
     // use reply API
     return client.replyMessage(event.replyToken, echo);
   }
