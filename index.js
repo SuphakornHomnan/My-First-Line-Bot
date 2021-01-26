@@ -76,51 +76,52 @@ async function handleEvent(event) {
   if (event.type !== "message" || event.message.type !== "text") {
     // ignore non-text-message event
     return Promise.resolve(null);
+  } else {
+    console.log(event.message.text);
+    const text_temp = event.message.text.split(" ");
+    console.log(text_temp);
+    if (text_temp.length >= 3) {
+      if (text_temp[2] === "มาถึงห้องเรียนรึยัง?") {
+        try {
+          const child = await childs.findOne({
+            firstname: text_temp[0],
+            lastname: text_temp[1],
+          });
+          console.log(child._id);
+          console.log(moment().format("YYYY-MM-DD"));
+          const attend = await attendances.findOne({
+            date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+            child: child._id,
+          });
+          console.log(attend);
+          let reply_attend = null;
+          if (attend) {
+            if (attend.attend) {
+              reply_attend = "มาถึงห้องเรียนแล้วครับ";
+            } else {
+              reply_attend = "ไม่มาเรียนนะครับ";
+            }
+          } else {
+            reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+          }
+          const payload = {
+            type: "text",
+            text: `วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`,
+          };
+          return client.replyMessage(event.replyToken, payload);
+        } catch (error) {
+          console.log(error.message);
+          return;
+        }
+      }
+    } else {
+      // create a echoing text message
+      const echo = { type: "text", text: event.message.text };
+      // use reply API
+      return client.replyMessage(event.replyToken, echo);
+    }
   }
   // ชื่อ นามสกุล มาถึงห้องเรียนรึยัง?
-  console.log(event.message.text);
-  const text_temp = event.message.text.split(" ");
-  console.log(text_temp);
-  if (text_temp.length >= 3) {
-    if (text_temp[2] === "มาถึงห้องเรียนรึยัง?") {
-      try {
-        const child = await childs.findOne({
-          firstname: text_temp[0],
-          lastname: text_temp[1],
-        });
-        console.log(child._id);
-        console.log(moment().format("YYYY-MM-DD"));
-        const attend = await attendances.findOne({
-          date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-          child: child._id,
-        });
-        console.log(attend);
-        let reply_attend = null;
-        if (attend) {
-          if (attend.attend) {
-            reply_attend = "มาถึงห้องเรียนแล้วครับ";
-          } else {
-            reply_attend = "ไม่มาเรียนนะครับ";
-          }
-        } else {
-          reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
-        }
-        const payload = {
-          type: "text",
-          text: `วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`,
-        };
-        return client.replyMessage(event.replyToken, payload);
-      } catch (error) {
-        console.log(error.message);
-        return;
-      }
-    }
-  } else {
-    // create a echoing text message
-    const echo = { type: "text", text: event.message.text };
-    // use reply API
-    return client.replyMessage(event.replyToken, echo);
-  }
 }
 
 // listen on port
