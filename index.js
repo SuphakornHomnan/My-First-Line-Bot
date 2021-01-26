@@ -31,9 +31,9 @@ app.post("/callback", line.middleware(config), (req, res) => {
       res.status(500).end();
     });
 });
-
+app.post("/", (req, res) => {});
 // event handler
-function handleEvent(event) {
+async function handleEvent(event) {
   if (event.type !== "message" || event.message.type !== "text") {
     // ignore non-text-message event
     return Promise.resolve(null);
@@ -46,27 +46,32 @@ function handleEvent(event) {
     event.message.type === "text" &&
     text_temp[2] === "มาถึงห้องเรียนรึยัง?"
   ) {
-    const child = childs.findOne({
-      firstname: text_temp[0],
-      lastname: text_temp[1],
-    });
-    console.log(child);
-    const attend = attendances.findOne({
-      date: moment().format("YYYY-MM-DD"),
-      child: child._id,
-    });
-    console.log(attend);
-    let reply_attend = null;
-    if (attend.attend) {
-      reply_attend = "มาถึงห้องเรียนแล้วครับ";
-    } else {
-      reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+    try {
+      const child = await childs.findOne({
+        firstname: text_temp[0],
+        lastname: text_temp[1],
+      });
+      console.log(child);
+      const attend = await attendances.findOne({
+        date: moment().format("YYYY-MM-DD"),
+        child: child._id,
+      });
+      console.log(attend);
+      let reply_attend = null;
+      if (attend.attend) {
+        reply_attend = "มาถึงห้องเรียนแล้วครับ";
+      } else {
+        reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+      }
+      const payload = {
+        type: "text",
+        text: `วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`,
+      };
+      return client.replyMessage(event.replyToken, payload);
+    } catch (error) {
+      console.log(error.message);
+      return;
     }
-    const payload = {
-      type: "text",
-      text: `วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`,
-    };
-    return client.replyMessage(event.replyToken, payload);
   } else {
     // create a echoing text message
     const echo = { type: "text", text: event.message.text };
