@@ -80,7 +80,7 @@ async function handleEvent(event) {
   // ชื่อ นามสกุล มาถึงห้องเรียนรึยัง?
   const text_temp = event.message.text.split(" ");
   console.log(text_temp);
-  if (text_temp.length < 3) {
+  if (text_temp.length >= 3) {
     if (
       event.message.type === "text" &&
       text_temp[2] === "มาถึงห้องเรียนรึยัง?"
