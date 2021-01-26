@@ -42,7 +42,7 @@ function handleEvent(event) {
   const text_temp = event.message.text.split(" ");
   console.log(text_temp);
   if (
-    event.message.type === "text" ||
+    event.message.type === "text" &&
     text_temp[2] === "มาถึงห้องเรียนรึยัง?"
   ) {
     const child = childs.findOne({
@@ -55,7 +55,7 @@ function handleEvent(event) {
       child,
     });
     console.log(attend);
-    const reply_attend = null;
+    let reply_attend = null;
     if (attend.attend) {
       reply_attend = "มาถึงห้องเรียนแล้วครับ";
     } else {
