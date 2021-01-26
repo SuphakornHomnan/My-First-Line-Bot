@@ -2,7 +2,10 @@
 
 const line = require("@line/bot-sdk");
 const express = require("express");
-
+require("./mongo");
+const attendances = require("./attendaces");
+const childs = require("./child");
+var moment = require("moment");
 // create LINE SDK config from env variables
 const config = {
   channelAccessToken:
@@ -35,12 +38,41 @@ function handleEvent(event) {
     // ignore non-text-message event
     return Promise.resolve(null);
   }
+  // ชื่อ นามสกุล มาถึงห้องเรียนรึยัง?
+  const text_temp = event.message.text.split(" ");
+  console.log(text_temp);
+  if (
+    event.message.type === "text" ||
+    text_temp[2] === "มาถึงห้องเรียนรึยัง?"
+  ) {
+    const child = childs.findOne({
+      firstname: text_temp,
+      lastname: text_temp[1],
+    });
+    console.log(child);
+    const attend = attendances.findOne({
+      date: moment().format("YYYY-MM-DD"),
+      child,
+    });
+    console.log(attend);
+    const reply_attend = null;
+    if (attend.attend) {
+      reply_attend = "มาถึงห้องเรียนแล้วครับ";
+    } else {
+      reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+    }
+    const payload = {
+      type: "text",
+      text: `วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`,
+    };
+    return client.replyMessage(event.replyToken, payload);
+  } else {
+    // create a echoing text message
+    const echo = { type: "text", text: event.message.text };
 
-  // create a echoing text message
-  const echo = { type: "text", text: event.message.text };
-
-  // use reply API
-  return client.replyMessage(event.replyToken, echo);
+    // use reply API
+    return client.replyMessage(event.replyToken, echo);
+  }
 }
 
 // listen on port
