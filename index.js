@@ -3,6 +3,9 @@
 const line = require("@line/bot-sdk");
 const express = require("express");
 require("./mongo");
+const logger = require("morgan");
+const cors = require("cors");
+const bodyParser = require("body-parser");
 const attendances = require("./attendaces");
 const childs = require("./child");
 var moment = require("moment");
@@ -19,7 +22,10 @@ const client = new line.Client(config);
 // create Express app
 // about Express itself: https://expressjs.com/
 const app = express();
-
+app.use(logger("dev"));
+app.use(cors({ credentials: true, origin: true }));
+app.use(bodyParser.json());
+app.use(express.json());
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
 app.post("/callback", line.middleware(config), (req, res) => {
@@ -31,7 +37,40 @@ app.post("/callback", line.middleware(config), (req, res) => {
       res.status(500).end();
     });
 });
-app.post("/", (req, res) => {});
+app.post("/", async (req, res) => {
+  console.log("hi");
+  console.log(req.body);
+  const { msg } = req.body;
+  const text_temp = msg.split(" ");
+  try {
+    const child = await childs.findOne({
+      firstname: text_temp[0],
+      lastname: text_temp[1],
+    });
+    console.log(child._id);
+    console.log(moment().format("YYYY-MM-DD"));
+    const attend = await attendances.findOne({
+      date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+      child: child._id,
+    });
+    console.log(attend);
+    let reply_attend = null;
+    if (attend) {
+      if (attend.attend) {
+        reply_attend = "มาถึงห้องเรียนแล้วครับ";
+      } else {
+        reply_attend = "ไม่มาเรียนนะครับ";
+      }
+    } else {
+      reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+    }
+
+    res.send(`วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`);
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).end();
+  }
+});
 // event handler
 async function handleEvent(event) {
   if (event.type !== "message" || event.message.type !== "text") {
@@ -41,37 +80,42 @@ async function handleEvent(event) {
   // ชื่อ นามสกุล มาถึงห้องเรียนรึยัง?
   const text_temp = event.message.text.split(" ");
   console.log(text_temp);
-
-  if (
-    event.message.type === "text" &&
-    text_temp[2] === "มาถึงห้องเรียนรึยัง?"
-  ) {
-    try {
-      const child = await childs.findOne({
-        firstname: text_temp[0],
-        lastname: text_temp[1],
-      });
-      console.log(child);
-      console.log(moment().format("YYYY-MM-DD"));
-      const attend = await attendances.findOne({
-        date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-        child: child._id,
-      });
-      console.log(attend);
-      let reply_attend = null;
-      if (attend.attend) {
-        reply_attend = "มาถึงห้องเรียนแล้วครับ";
-      } else {
-        reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+  if (text_temp.length < 3) {
+    if (
+      event.message.type === "text" &&
+      text_temp[2] === "มาถึงห้องเรียนรึยัง?"
+    ) {
+      try {
+        const child = await childs.findOne({
+          firstname: text_temp[0],
+          lastname: text_temp[1],
+        });
+        console.log(child._id);
+        console.log(moment().format("YYYY-MM-DD"));
+        const attend = await attendances.findOne({
+          date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+          child: child._id,
+        });
+        console.log(attend);
+        let reply_attend = null;
+        if (attend) {
+          if (attend.attend) {
+            reply_attend = "มาถึงห้องเรียนแล้วครับ";
+          } else {
+            reply_attend = "ไม่มาเรียนนะครับ";
+          }
+        } else {
+          reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+        }
+        const payload = {
+          type: "text",
+          text: `วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`,
+        };
+        return client.replyMessage(event.replyToken, payload);
+      } catch (error) {
+        console.log(error.message);
+        return;
       }
-      const payload = {
-        type: "text",
-        text: `วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`,
-      };
-      return client.replyMessage(event.replyToken, payload);
-    } catch (error) {
-      console.log(error.message);
-      return;
     }
   } else {
     // create a echoing text message
@@ -83,7 +127,7 @@ async function handleEvent(event) {
 }
 
 // listen on port
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 7000;
 app.listen(port, () => {
   console.log(`listening on ${port}`);
 });
