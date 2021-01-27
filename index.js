@@ -3,11 +3,12 @@
 const line = require("@line/bot-sdk");
 const express = require("express");
 require("./mongo");
-const logger = require("morgan");
-const cors = require("cors");
-const bodyParser = require("body-parser");
+// const logger = require("morgan");
+// const cors = require("cors");
+// const bodyParser = require("body-parser");
 const attendances = require("./attendaces");
 const childs = require("./child");
+const healths = require("./health");
 var moment = require("moment");
 // create LINE SDK config from env variables
 const config = {
@@ -84,27 +85,49 @@ async function handleEvent(event) {
         nickname: text_temp[0],
       });
       console.log(child._id);
-      console.log(moment().format("YYYY-MM-DD"));
-      const attend = await attendances.findOne({
-        date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-        child: child._id,
-      });
-      console.log(attend);
-      let reply_attend = null;
-      if (attend) {
-        if (attend.attend) {
-          reply_attend = "มาถึงห้องเรียนแล้วครับ";
+      if (text_temp[1] === "มาถึงห้องเรียนรึยัง") {
+        console.log(moment().format("YYYY-MM-DD"));
+        const attend = await attendances.findOne({
+          date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+          child: child._id,
+        });
+        console.log(attend);
+        let reply_attend = null;
+        if (attend) {
+          if (attend.attend) {
+            reply_attend = "มาถึงห้องเรียนแล้วครับ";
+          } else {
+            reply_attend = "ไม่มาเรียนนะครับ";
+          }
         } else {
-          reply_attend = "ไม่มาเรียนนะครับ";
+          reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
         }
-      } else {
-        reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+        const payload = {
+          type: "text",
+          text: `วันนี้น้อง ${text_temp[0]} ${reply_attend}`,
+        };
+        return client.replyMessage(event.replyToken, payload);
+      } else if (text_temp[1] === "สบายดีไหมวันนี้") {
+        const info = await healths.findOne({
+          date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+          child: child._id,
+        });
+        let reply_health = null;
+        if (info) {
+          if (info.temperature) {
+            reply_health = "สบายดีครับ ^ ^";
+          } else {
+            reply_health = "ไม่สบายนะครับ(เป็นไข้ ตัวร้อน) ";
+          }
+        } else {
+          reply_health = "ยังไม่ได้ตรวจไข้ครับ";
+        }
+        const payload = {
+          type: "text",
+          text: `วันนี้น้อง ${text_temp[0]} ${reply_health}`,
+        };
+        return client.replyMessage(event.replyToken, payload);
       }
-      const payload = {
-        type: "text",
-        text: `วันนี้น้อง ${text_temp[0]} ${reply_attend}`,
-      };
-      return client.replyMessage(event.replyToken, payload);
     } catch (error) {
       console.log(error.message);
       res.status(400).end();
