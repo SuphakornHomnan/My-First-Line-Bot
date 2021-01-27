@@ -79,7 +79,7 @@ async function handleEvent(event) {
   }
 
   let text_temp = event.message.text.split(" ");
-  if ((text_temp.length = 2)) {
+  if (text_temp.length === 2) {
     try {
       const child = await childs.findOne({
         nickname: text_temp[0],
