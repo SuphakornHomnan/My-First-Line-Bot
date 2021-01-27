@@ -79,11 +79,12 @@ async function handleEvent(event) {
   }
 
   let text_temp = event.message.text.split(" ");
-  if (text_temp.length > 1) {
+  if ((text_temp.length = 2)) {
     try {
       const child = await childs.findOne({
         nickname: text_temp[0],
       });
+      console.log(child);
       console.log(child._id);
       if (text_temp[1] === "มาถึงห้องเรียนรึยัง") {
         console.log(moment().format("YYYY-MM-DD"));
@@ -130,11 +131,19 @@ async function handleEvent(event) {
       }
     } catch (error) {
       console.log(error.message);
-      res.status(400).end();
+      const echo = {
+        type: "text",
+        text:
+          "น้องคนนี้ไม่ได้อยู่nurseryนี้ กรุณากรอกชื่อน้องให้ถูกต้องตามที่ลงทะเบียนไว้ด้วยครับ",
+      };
+      return client.replyMessage(event.replyToken, echo);
     }
   } else {
     // create a echoing text message
-    const echo = { type: "text", text: event.message.text };
+    const echo = {
+      type: "text",
+      text: "ฉันไม่สามารถตอบโต้คำถามนี้ได้ ขอโทษนะ",
+    };
     // use reply API
     return client.replyMessage(event.replyToken, echo);
   }
