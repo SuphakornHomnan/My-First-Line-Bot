@@ -114,7 +114,7 @@ async function handleEvent(event) {
           child: child._id,
         });
         let reply_health = null;
-        if (info) {
+        if (info.temperature !== null) {
           if (info.temperature) {
             reply_health = "สบายดีครับ ^ ^";
           } else {
