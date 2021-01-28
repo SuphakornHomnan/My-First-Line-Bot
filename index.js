@@ -37,118 +37,104 @@ app.post("/callback", line.middleware(config), (req, res) => {
       res.status(500).end();
     });
 });
-app.post("/", async (req, res) => {
-  console.log("hi");
-  console.log(req.body);
-  const { msg } = req.body;
-  const text_temp = msg.split(" ");
-  try {
-    const child = await childs.findOne({
-      firstname: text_temp[0],
-      lastname: text_temp[1],
-    });
-    console.log(child._id);
-    console.log(moment().format("YYYY-MM-DD"));
-    const attend = await attendances.findOne({
-      date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-      child: child._id,
-    });
-    console.log(attend);
-    let reply_attend = null;
-    if (attend) {
-      if (attend.attend) {
-        reply_attend = "มาถึงห้องเรียนแล้วครับ";
-      } else {
-        reply_attend = "ไม่มาเรียนนะครับ";
-      }
-    } else {
-      reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
-    }
+// app.post("/", async (req, res) => {
+//   console.log("hi");
+//   console.log(req.body);
+//   const { msg } = req.body;
+//   const text_temp = msg.split(" ");
+//   try {
+//     const child = await childs.findOne({
+//       firstname: text_temp[0],
+//       lastname: text_temp[1],
+//     });
+//     console.log(child._id);
+//     console.log(moment().format("YYYY-MM-DD"));
+//     const attend = await attendances.findOne({
+//       date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+//       child: child._id,
+//     });
+//     console.log(attend);
+//     let reply_attend = null;
+//     if (attend) {
+//       if (attend.attend) {
+//         reply_attend = "มาถึงห้องเรียนแล้วครับ";
+//       } else {
+//         reply_attend = "ไม่มาเรียนนะครับ";
+//       }
+//     } else {
+//       reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+//     }
 
-    res.send(`วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`);
-  } catch (error) {
-    console.log(error.message);
-    res.status(400).end();
-  }
-});
+//     res.send(`วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`);
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(400).end();
+//   }
+// });
 // event handler
 async function handleEvent(event) {
   if (event.type !== "message" || event.message.type !== "text") {
     // ignore non-text-message event
     return Promise.resolve(null);
   }
-
-  let text_temp = event.message.text.split(" ");
-  if (text_temp.length === 2) {
+  if (event.message.text === "ข้อมูลประจำวัน") {
+    const echo = {
+      type: "text",
+      text: "น้องชื่ออะไรครับ",
+    };
+    return client.replyMessage(event.replyToken, echo);
+  } else {
     try {
       const child = await childs.findOne({
-        nickname: text_temp[0],
+        nickname: event.message.text,
       });
       console.log(child);
       console.log(child._id);
-      if (text_temp[1] === "มาถึงห้องเรียนรึยัง") {
-        console.log(moment().format("YYYY-MM-DD"));
-        const attend = await attendances.findOne({
-          date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-          child: child._id,
-        });
-        console.log(attend);
-        let reply_attend = null;
-        if (attend) {
-          if (attend.attend) {
-            reply_attend = "มาถึงห้องเรียนแล้วครับ";
-          } else {
-            reply_attend = "ไม่มาเรียนนะครับ";
-          }
+      console.log(moment().format("YYYY-MM-DD"));
+      const attend = await attendances.findOne({
+        date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+        child: child._id,
+      });
+      const info = await healths.findOne({
+        date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+        child: child._id,
+      });
+      console.log(attend);
+      let reply_attend = null;
+      let reply_health = null;
+      if (attend) {
+        if (attend.attend) {
+          reply_attend = `วันนี้น้อง${child.nickname}มาถึงห้องเรียนแล้วครับ`;
         } else {
-          reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
+          reply_attend = `วันนี้น้อง${child.nickname}ไม่มาเรียนนะครับ`;
         }
-        const payload = {
-          type: "text",
-          text: `วันนี้น้อง ${text_temp[0]} ${reply_attend}`,
-        };
-        return client.replyMessage(event.replyToken, payload);
-      } else if (text_temp[1] === "สบายดีไหมวันนี้") {
-        const info = await healths.findOne({
-          date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-          child: child._id,
-        });
-        let reply_health = null;
-        if (info.temperature !== null) {
-          if (info.temperature) {
-            reply_health = "สบายดีครับ ^ ^";
-          } else {
-            reply_health = "ไม่สบายนะครับ(เป็นไข้ ตัวร้อน) ";
-          }
-        } else {
-          reply_health = "ยังไม่ได้ตรวจไข้ครับ";
-        }
-        const payload = {
-          type: "text",
-          text: `วันนี้น้อง ${text_temp[0]} ${reply_health}`,
-        };
-        return client.replyMessage(event.replyToken, payload);
+      } else {
+        reply_attend = `วันนี้น้อง${child.nickname}ยังไม่มาถึงห้องเรียนครับ`;
       }
+      if (info.temperature !== null) {
+        if (info.temperature) {
+          reply_health = `น้องสบายดีครับวันนี้ ^ ^`;
+        } else {
+          reply_health = `น้องไม่สบายนะครับวันนี้`;
+        }
+      } else {
+        reply_health = `น้องยังไม่ได้ตรวจไข้ครับวันนี้`;
+      }
+      const payload = {
+        type: "text",
+        text: `${reply_attend}  ${reply_health}`,
+      };
+      return client.replyMessage(event.replyToken, payload);
     } catch (error) {
       console.log(error.message);
       const echo = {
         type: "text",
-        text:
-          "น้องคนนี้ไม่ได้อยู่nurseryนี้ กรุณากรอกชื่อน้องให้ถูกต้องตามที่ลงทะเบียนไว้ด้วยครับ",
+        text: "ฉันไม่สามารถตอบโต้คำถามนี้ได้ ขอโทษนะ",
       };
+      // use reply API
       return client.replyMessage(event.replyToken, echo);
     }
-  } else {
-    // create a echoing text message
-    const echo = {
-      type: "text",
-      text: "ฉันไม่สามารถตอบโต้คำถามนี้ได้ ขอโทษนะ",
-    };
-    // use reply API
-    return client.replyMessage(event.replyToken, echo);
   }
-
-  // ชื่อ นามสกุล มาถึงห้องเรียนรึยัง?
 }
 
 // listen on port
