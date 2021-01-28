@@ -77,6 +77,21 @@ async function handleEvent(event) {
     // ignore non-text-message event
     return Promise.resolve(null);
   }
+  if (
+    event.message.text === "ขอบคุณครับ" ||
+    event.message.text === "ขอบคุณค่ะ" ||
+    event.message.text === "ขอบคุณ" ||
+    event.message.text === "ขอบคุณคะ" ||
+    event.message.text === "Thank you" ||
+    event.message.text === "Thx" ||
+    event.message.text === "thx"
+  ) {
+    const echo = {
+      type: "text",
+      text: "ยินดีครับ ^ ^ (Your welcome ^ ^)",
+    };
+    return client.replyMessage(event.replyToken, echo);
+  }
   if (event.message.text === "ข้อมูลประจำวัน") {
     const echo = {
       type: "text",
