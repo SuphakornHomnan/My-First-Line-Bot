@@ -100,6 +100,7 @@ async function handleEvent(event) {
         child: child._id,
       });
       console.log(attend);
+      console.log(info);
       let reply_attend = null;
       let reply_health = null;
       if (attend) {
@@ -111,11 +112,13 @@ async function handleEvent(event) {
       } else {
         reply_attend = `วันนี้น้อง${child.nickname}ยังไม่มาถึงห้องเรียนครับ`;
       }
-      if (info.temperature !== null) {
+      if (info !== null) {
         if (info.temperature) {
           reply_health = `น้องสบายดีครับวันนี้ ^ ^`;
-        } else {
+        } else if (info.temperature === false) {
           reply_health = `น้องไม่สบายนะครับวันนี้`;
+        } else {
+          reply_health = `น้องยังไม่ได้ตรวจไข้ครับวันนี้`;
         }
       } else {
         reply_health = `น้องยังไม่ได้ตรวจไข้ครับวันนี้`;
