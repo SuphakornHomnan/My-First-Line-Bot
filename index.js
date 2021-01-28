@@ -81,14 +81,21 @@ async function handleEvent(event) {
     event.message.text === "ขอบคุณครับ" ||
     event.message.text === "ขอบคุณค่ะ" ||
     event.message.text === "ขอบคุณ" ||
-    event.message.text === "ขอบคุณคะ" ||
+    event.message.text === "ขอบคุณคะ"
+  ) {
+    const echo = {
+      type: "text",
+      text: "ยินดีครับ ^ ^",
+    };
+    return client.replyMessage(event.replyToken, echo);
+  } else if (
     event.message.text === "Thank you" ||
     event.message.text === "Thx" ||
     event.message.text === "thx"
   ) {
     const echo = {
       type: "text",
-      text: "ยินดีครับ ^ ^ (Your welcome ^ ^)",
+      text: "Your welcome ^ ^",
     };
     return client.replyMessage(event.replyToken, echo);
   }
