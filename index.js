@@ -130,9 +130,9 @@ async function check_data() {
       hours_count = hours_count - 24;
     } else {
     }
-    var o_clock = `${hours_count}:${minute_count}:${second_count}`;
+    var o_clock = `${hours_count}:${minute_count}`;
     console.log(o_clock);
-    if (!trigger_date && o_clock === "21:5:0") {
+    if (!trigger_date && o_clock === "21:10") {
       check_data().then((result) => {
         console.log("--------");
         console.log(result);
@@ -153,7 +153,7 @@ async function check_data() {
   function run() {
     setInterval(() => {
       send_msg();
-    }, SECOND);
+    }, MINUTE);
   }
   run();
 })();
