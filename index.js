@@ -137,21 +137,21 @@ async function check_data() {
       hours_count = hours_count - 24;
     } else {
     }
-    var o_clock = `${hours_count}:${minute_count}`;
+    var o_clock = `${hours_count}:${minute_count}:${second_count}`;
     console.log(o_clock);
-    if (!trigger_date && o_clock === "21:10") {
-      check_data().then((result) => {
-        console.log("--------");
-        console.log(result);
-        if (result._id.length > 0) {
-          write_file(o_clock, result);
-          shell.exec("chmod +x ./test.sh");
-          shell.exec("./test.sh");
-        } else {
-          //Don't send msg to guardians
-          console.log(`today don't have child absent`);
-        }
-      });
+    if (!trigger_date && o_clock === "1:9:0") {
+      // check_data().then((result) => {
+      //   console.log("--------");
+      //   console.log(result);
+      //   if (result._id.length > 0) {
+      //     write_file(o_clock, result);
+      //     shell.exec("chmod +x ./test.sh");
+      //     shell.exec("./test.sh");
+      //   } else {
+      //     //Don't send msg to guardians
+      //     console.log(`today don't have child absent`);
+      //   }
+      // });
     } else {
       // Do nothing
     }
@@ -160,7 +160,7 @@ async function check_data() {
   function run() {
     setInterval(() => {
       send_msg();
-    }, MINUTE);
+    }, SECOND);
   }
   run();
 })();
@@ -192,14 +192,14 @@ async function handleEvent(event) {
       text: "Your welcome ^ ^",
     };
   } else if (event.message.text === "check_health") {
-    const reply_health = send_health_info(guardian_line_id);
-    console.log(reply_health);
+    const result = await send_health_info("Uaf3e8e05760c1392233f0aaa85f83b87");
+    console.log(result);
     payload = {
       type: "text",
-      text: reply_health,
+      text: result,
     };
   } else if (event.message.text === "check_payment") {
-    const reply_payment = send_payment_info(guardian_line_id);
+    const reply_payment = await send_payment_info(guardian_line_id);
     console.log(reply_payment);
     payload = {
       type: "text",

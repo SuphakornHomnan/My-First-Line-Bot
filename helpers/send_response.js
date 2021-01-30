@@ -43,23 +43,23 @@ exports.send_health_info = async (line_id) => {
     const find_child_from_guardian = await guardians.findOne({
       line_id,
     });
-
-    console.log(moment().format("YYYY-MM-DD"));
+    console.log(find_child_from_guardian);
     const info = await healths.findOne({
       date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
       child: find_child_from_guardian.child,
     });
     console.log(info);
-    if (info !== null) {
-      if (info.temperature) {
-        return `น้องสบายดีครับวันนี้ ^ ^`;
-      } else if (info.temperature === false) {
-        return `น้องไม่สบายนะครับวันนี้`;
-      } else {
-        return `น้องยังไม่ได้ตรวจไข้ครับวันนี้`;
-      }
+    if (info === null) {
+      console.log("in null");
+      return "น้องยังไม่ได้ตรวจไข้ครับวันนี้";
     } else {
-      return `น้องยังไม่ได้ตรวจไข้ครับวันนี้`;
+      if (info.temperature) {
+        return "น้องสบายดีครับวันนี้ ^ ^";
+      } else if (info.temperature === false) {
+        return "น้องไม่สบายนะครับวันนี้";
+      } else {
+        return "น้องยังไม่ได้ตรวจไข้ครับวันนี้";
+      }
     }
   } catch (error) {
     console.log("[ERROR] at send_health_info_func");
