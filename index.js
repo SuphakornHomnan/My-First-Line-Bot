@@ -1,7 +1,9 @@
 "use strict";
-
+//userId: 'Uaf3e8e05760c1392233f0aaa85f83b87'
 const line = require("@line/bot-sdk");
 const express = require("express");
+const shell = require("shelljs");
+const fs = require("fs");
 require("./mongo");
 // const logger = require("morgan");
 // const cors = require("cors");
@@ -9,6 +11,7 @@ require("./mongo");
 const attendances = require("./attendaces");
 const childs = require("./child");
 const healths = require("./health");
+const guardians = require("./guardian");
 var moment = require("moment");
 // create LINE SDK config from env variables
 const config = {
@@ -20,13 +23,8 @@ const config = {
 // create LINE SDK client
 const client = new line.Client(config);
 
-// create Express app
-// about Express itself: https://expressjs.com/
 const app = express();
-// app.use(logger("dev"));
-// app.use(cors({ credentials: true, origin: true }));
-// app.use(bodyParser.json());
-// app.use(express.json());
+
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
 app.post("/callback", line.middleware(config), (req, res) => {
@@ -37,41 +35,128 @@ app.post("/callback", line.middleware(config), (req, res) => {
       res.status(500).end();
     });
 });
-// app.post("/", async (req, res) => {
-//   console.log("hi");
-//   console.log(req.body);
-//   const { msg } = req.body;
-//   const text_temp = msg.split(" ");
-//   try {
-//     const child = await childs.findOne({
-//       firstname: text_temp[0],
-//       lastname: text_temp[1],
-//     });
-//     console.log(child._id);
-//     console.log(moment().format("YYYY-MM-DD"));
-//     const attend = await attendances.findOne({
-//       date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-//       child: child._id,
-//     });
-//     console.log(attend);
-//     let reply_attend = null;
-//     if (attend) {
-//       if (attend.attend) {
-//         reply_attend = "มาถึงห้องเรียนแล้วครับ";
-//       } else {
-//         reply_attend = "ไม่มาเรียนนะครับ";
-//       }
-//     } else {
-//       reply_attend = "ยังไม่มาถึงห้องเรียนครับ";
-//     }
 
-//     res.send(`วันนี้น้อง ${text_temp[0]} ${text_temp[1]} ${reply_attend}`);
-//   } catch (error) {
-//     console.log(error.message);
-//     res.status(400).end();
-//   }
-// });
-// event handler
+function check_day(day) {
+  if (day === "Sun" || day === "Sat") {
+    return false;
+  } else {
+    return true;
+  }
+}
+async function write_file(o_clock, msg) {
+  let users = ``;
+  msg._id.forEach((element, index) => {
+    users = users.concat(`"`);
+    users = users.concat(element);
+    if (msg._id.length - 1 === index) {
+      users = users.concat(`"`);
+    } else {
+      users = users.concat(`",`);
+    }
+  });
+  console.log(typeof users);
+  console.log(`${users}`);
+  console.log(msg.attend);
+  console.log(o_clock);
+  try {
+    await fs.writeFileSync(
+      "./test.sh",
+      `curl -H 'Content-Type: application/json' -H 'Authorization: Bearer {exBaua04Is156G9zTpYwWOHZ6G7fSErmWVb52ft27laxkvlteQ16YoreJXMS8X0onZ7wQ+/saIZf6nhffBeX8bhXt42hpVF9kMKpQK7oWg0GSvN9+jBbxixWzciyWRr/yuuu9wY1s6NhoqJjAYK4uAdB04t89/1O/w1cDnyilFU=}' -X POST -d '{
+        "to": [${users}],
+        "messages":[
+          {
+            "type":"text",
+            "text":"น้อง${msg.attend}"
+          },
+          {
+            "type":"text",
+            "text":"ตอนนี้เวลา ${o_clock}"
+          }
+        ]
+      }' https://api.line.me/v2/bot/message/multicast`,
+      (err) => {
+        if (err) {
+          console.log("error at write_file_func");
+          console.log(err);
+        }
+        console.log("Saved");
+      }
+    );
+  } catch (err) {
+    console.log("error begun");
+    console.log(err);
+  }
+}
+async function check_data() {
+  const absent_today = await attendances.find({
+    date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
+    attend: false,
+  });
+  console.log(absent_today);
+  var info = [];
+  for (let i = 0; i < absent_today.length; i++) {
+    var temp = await guardians.find({ child: absent_today[i].child });
+    console.log(temp);
+    for (let j = 0; j < temp.length; j++) {
+      if (temp[j].line_id === undefined) {
+      } else {
+        info.push(temp[j].line_id);
+      }
+    }
+  }
+  console.log(info);
+  return {
+    _id: info,
+    attend: "ไม่มาเรียนวันนี้นะครับ",
+  };
+}
+(() => {
+  const SECOND = 1000;
+  const MINUTE = SECOND * 60;
+  const HOUR = MINUTE * 60;
+  const DAY = HOUR * 24;
+  function send_msg() {
+    var today = new Date();
+    var today_str = today.toString();
+    var today_split = today_str.split(" ");
+    var trigger_date = check_day(today_split[0]);
+    var time = today.getTime();
+    let hours_count = Math.floor((time % DAY) / HOUR);
+    const minute_count = Math.floor((time % HOUR) / MINUTE);
+    const second_count = Math.floor((time % MINUTE) / SECOND);
+
+    hours_count += 7;
+    if (hours_count > 23) {
+      hours_count = hours_count - 24;
+    } else {
+    }
+    var o_clock = `${hours_count}:${minute_count}:${second_count}`;
+    console.log(o_clock);
+    if (!trigger_date && o_clock === "21:5:0") {
+      check_data().then((result) => {
+        console.log("--------");
+        console.log(result);
+        if (result._id.length > 0) {
+          write_file(o_clock, result);
+          shell.exec("chmod +x ./test.sh");
+          shell.exec("./test.sh");
+        } else {
+          //Don't send msg to guardians
+          console.log(`today don't have child absent`);
+        }
+      });
+    } else {
+      //console.log(time);
+    }
+  }
+
+  function run() {
+    setInterval(() => {
+      send_msg();
+    }, SECOND);
+  }
+  run();
+})();
 async function handleEvent(event) {
   console.log(event);
   if (event.type !== "message" || event.message.type !== "text") {
