@@ -28,6 +28,9 @@ const app = express();
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
 app.post("/callback", line.middleware(config), (req, res) => {
+  console.log("req.body");
+  console.log(req.body);
+  console.log("----------");
   Promise.all(req.body.events.map(handleEvent))
     .then((result) => res.json(result))
     .catch((err) => {
@@ -146,7 +149,7 @@ async function check_data() {
         }
       });
     } else {
-      //console.log(time);
+      // Do nothing
     }
   }
 
@@ -159,6 +162,7 @@ async function check_data() {
 })();
 async function handleEvent(event) {
   console.log(event);
+  const guardian_line_id = event.source.userId;
   if (event.type !== "message" || event.message.type !== "text") {
     // ignore non-text-message event
     return Promise.resolve(null);
@@ -186,15 +190,18 @@ async function handleEvent(event) {
     return client.replyMessage(event.replyToken, echo);
   }
   if (event.message.text === "ข้อมูลประจำวัน") {
-    const echo = {
-      type: "text",
-      text: "น้องชื่ออะไรครับ",
-    };
-    return client.replyMessage(event.replyToken, echo);
-  } else {
+    // const echo = {
+    //   type: "text",
+    //   text: "น้องชื่ออะไรครับ",
+    // };
+    // return client.replyMessage(event.replyToken, echo);
     try {
+      const find_child_from_guardian = await guardians.findOne({
+        line_id: guardian_line_id,
+      });
+
       const child = await childs.findOne({
-        nickname: event.message.text,
+        _id: find_child_from_guardian.child,
       });
       console.log(child);
       console.log(child._id);
@@ -231,20 +238,27 @@ async function handleEvent(event) {
       } else {
         reply_health = `น้องยังไม่ได้ตรวจไข้ครับวันนี้`;
       }
-      const payload = {
-        type: "text",
-        text: `${reply_attend}  ${reply_health}`,
-      };
+      const payload = [
+        {
+          type: "text",
+          text: `${reply_attend}  `,
+        },
+        {
+          type: "text",
+          text: `${reply_health}`,
+        },
+      ];
       return client.replyMessage(event.replyToken, payload);
     } catch (error) {
-      console.log(error.message);
-      const echo = {
-        type: "text",
-        text: "ฉันไม่สามารถตอบโต้คำถามนี้ได้ ขอโทษนะ",
-      };
-      // use reply API
-      return client.replyMessage(event.replyToken, echo);
+      console.log(error);
     }
+  } else {
+    const echo = {
+      type: "text",
+      text: "ฉันไม่สามารถตอบโต้คำถามนี้ได้ ขอโทษนะ",
+    };
+    // use reply API
+    return client.replyMessage(event.replyToken, echo);
   }
 }
 
