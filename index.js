@@ -12,6 +12,10 @@ const attendances = require("./attendaces");
 const childs = require("./child");
 const healths = require("./health");
 const guardians = require("./guardian");
+const {
+  send_health_info,
+  send_payment_info,
+} = require("./helpers/send_response");
 var moment = require("moment");
 // create LINE SDK config from env variables
 const config = {
@@ -163,6 +167,7 @@ async function check_data() {
 async function handleEvent(event) {
   console.log(event);
   const guardian_line_id = event.source.userId;
+  var payload = {};
   if (event.type !== "message" || event.message.type !== "text") {
     // ignore non-text-message event
     return Promise.resolve(null);
@@ -173,93 +178,41 @@ async function handleEvent(event) {
     event.message.text === "ขอบคุณ" ||
     event.message.text === "ขอบคุณคะ"
   ) {
-    const echo = {
+    payload = {
       type: "text",
       text: "ยินดีครับ ^ ^",
     };
-    return client.replyMessage(event.replyToken, echo);
   } else if (
     event.message.text === "Thank you" ||
     event.message.text === "Thx" ||
     event.message.text === "thx"
   ) {
-    const echo = {
+    payload = {
       type: "text",
       text: "Your welcome ^ ^",
     };
-    return client.replyMessage(event.replyToken, echo);
-  }
-  if (event.message.text === "ข้อมูลประจำวัน") {
-    // const echo = {
-    //   type: "text",
-    //   text: "น้องชื่ออะไรครับ",
-    // };
-    // return client.replyMessage(event.replyToken, echo);
-    try {
-      const find_child_from_guardian = await guardians.findOne({
-        line_id: guardian_line_id,
-      });
-
-      const child = await childs.findOne({
-        _id: find_child_from_guardian.child,
-      });
-      console.log(child);
-      console.log(child._id);
-      console.log(moment().format("YYYY-MM-DD"));
-      const attend = await attendances.findOne({
-        date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-        child: child._id,
-      });
-      const info = await healths.findOne({
-        date: moment().format("YYYY-MM-DD") + "T00:00:00.000+00:00",
-        child: child._id,
-      });
-      console.log(attend);
-      console.log(info);
-      let reply_attend = null;
-      let reply_health = null;
-      if (attend) {
-        if (attend.attend) {
-          reply_attend = `วันนี้น้อง${child.nickname}มาถึงห้องเรียนแล้วครับ`;
-        } else {
-          reply_attend = `วันนี้น้อง${child.nickname}ไม่มาเรียนนะครับ`;
-        }
-      } else {
-        reply_attend = `วันนี้น้อง${child.nickname}ยังไม่มาถึงห้องเรียนครับ`;
-      }
-      if (info !== null) {
-        if (info.temperature) {
-          reply_health = `น้องสบายดีครับวันนี้ ^ ^`;
-        } else if (info.temperature === false) {
-          reply_health = `น้องไม่สบายนะครับวันนี้`;
-        } else {
-          reply_health = `น้องยังไม่ได้ตรวจไข้ครับวันนี้`;
-        }
-      } else {
-        reply_health = `น้องยังไม่ได้ตรวจไข้ครับวันนี้`;
-      }
-      const payload = [
-        {
-          type: "text",
-          text: `${reply_attend}  `,
-        },
-        {
-          type: "text",
-          text: `${reply_health}`,
-        },
-      ];
-      return client.replyMessage(event.replyToken, payload);
-    } catch (error) {
-      console.log(error);
-    }
+  } else if (event.message.text === "check_health") {
+    const reply_health = send_health_info(guardian_line_id);
+    console.log(reply_health);
+    payload = {
+      type: "text",
+      text: reply_health,
+    };
+  } else if (event.message.text === "check_payment") {
+    const reply_payment = send_payment_info(guardian_line_id);
+    console.log(reply_payment);
+    payload = {
+      type: "text",
+      text: reply_payment,
+    };
   } else {
-    const echo = {
+    payload = {
       type: "text",
       text: "ฉันไม่สามารถตอบโต้คำถามนี้ได้ ขอโทษนะ",
     };
-    // use reply API
-    return client.replyMessage(event.replyToken, echo);
   }
+  // use reply API
+  return client.replyMessage(event.replyToken, payload);
 }
 
 // listen on port
