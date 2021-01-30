@@ -139,19 +139,19 @@ async function check_data() {
     }
     var o_clock = `${hours_count}:${minute_count}:${second_count}`;
     console.log(o_clock);
-    if (!trigger_date && o_clock === "1:9:0") {
-      // check_data().then((result) => {
-      //   console.log("--------");
-      //   console.log(result);
-      //   if (result._id.length > 0) {
-      //     write_file(o_clock, result);
-      //     shell.exec("chmod +x ./test.sh");
-      //     shell.exec("./test.sh");
-      //   } else {
-      //     //Don't send msg to guardians
-      //     console.log(`today don't have child absent`);
-      //   }
-      // });
+    if (trigger_date && o_clock === "10:0:0") {
+      check_data().then((result) => {
+        console.log("--------");
+        console.log(result);
+        if (result._id.length > 0) {
+          write_file(o_clock, result);
+          shell.exec("chmod +x ./test.sh");
+          shell.exec("./test.sh");
+        } else {
+          //Don't send msg to guardians
+          console.log(`today don't have child absent`);
+        }
+      });
     } else {
       // Do nothing
     }
