@@ -2,7 +2,7 @@ const express = require('express')
 const line = require('@line/bot-sdk')
 
 require('dotenv').config()
-require('./mongo')
+require('../model/mongo')
 
 const {
   sendHealthInfo,
