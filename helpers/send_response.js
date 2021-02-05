@@ -2,7 +2,7 @@ const moment = require('moment')
 
 const healths = require('../models/health')
 const guardians = require('../models/guardian')
-const payments = require('../model/payment')
+const payments = require('../models/payment')
 
 exports.sendPaymentInfo = async (lineId) => {
   try {
