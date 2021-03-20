@@ -32,8 +32,8 @@ app.post('/callback', line.middleware(config), (req, res) => {
 })
 
 async function handleEvent (event) {
-  console.log(event)
   const guardianLineId = event.source.userId
+  console.log(guardianLineId)
   let payload = {}
   if (event.type !== 'message' || event.message.type !== 'text') {
     // ignore non-text-message event
@@ -60,8 +60,6 @@ async function handleEvent (event) {
     }
   } else if (event.message.text === 'check_health') {
     const result = await sendHealthInfo(guardianLineId)
-    console.log(result)
-
     payload = {
       type: 'text',
       text: result
