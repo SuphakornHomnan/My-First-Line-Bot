@@ -57,7 +57,7 @@ exports.sendHealthInfo = async (lineId) => {
 
     if (info === null) {
       console.log('in null')
-      return 'น้องยังไม่ได้ตรวจไข้ครับวันนี้'ด
+      return 'น้องยังไม่ได้ตรวจไข้ครับวันนี้'
     } else {
       if (info.temperature) {
         return 'น้องสบายดีครับวันนี้ ^ ^'
