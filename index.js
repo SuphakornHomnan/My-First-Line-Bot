@@ -33,7 +33,6 @@ app.post('/callback', line.middleware(config), (req, res) => {
 
 async function handleEvent (event) {
   const guardianLineId = event.source.userId
-  console.log(guardianLineId)
   let payload = {}
   if (event.type !== 'message' || event.message.type !== 'text') {
     // ignore non-text-message event
