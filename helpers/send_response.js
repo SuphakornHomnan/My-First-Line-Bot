@@ -27,7 +27,7 @@ exports.sendPaymentInfo = async (lineId) => {
       }
       return temp
     } else if (info.length === 0) {
-      return null
+      return 'น้องยังไม่มีรายการทางการเงินค้างเลย'
     } else {
       if (info[0].outstanding_balance === 0) {
         return `รายการ${info[0].topic} ชำระครบแล้ว`
@@ -57,7 +57,7 @@ exports.sendHealthInfo = async (lineId) => {
 
     if (info === null) {
       console.log('in null')
-      return 'น้องยังไม่ได้ตรวจไข้ครับวันนี้'
+      return 'น้องยังไม่ได้ตรวจไข้ครับวันนี้'ด
     } else {
       if (info.temperature) {
         return 'น้องสบายดีครับวันนี้ ^ ^'

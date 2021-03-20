@@ -35,7 +35,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
 })
 
 async function handleEvent (event) {
-  console.log(event)
+  console.log(event.events[0].source)
   const guardianLineId = event.source.userId
   let payload = {}
   if (event.type !== 'message' || event.message.type !== 'text') {
