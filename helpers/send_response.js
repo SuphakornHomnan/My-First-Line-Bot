@@ -44,7 +44,7 @@ exports.sendPaymentInfo = async (lineId) => {
 
 exports.sendHealthInfo = async (lineId) => {
   try {
-    console.log(lineId)
+    console.log(typeof lineId)
     const guardianInfo = await guardians.findOne({ line_id: lineId})
     console.log(guardianInfo)
     const findChildFromGuardian = await guardians.findOne({
